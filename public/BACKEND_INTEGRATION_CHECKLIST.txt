@@ -1,0 +1,389 @@
+# Backend Integration Preparation - Comprehensive Checklist
+
+## FEATURE SCOPE (Approved)
+✅ User authentication (register/login with JWT)
+✅ Author roles (is_author flag - readers vs authors)
+✅ Post CRUD operations
+✅ Categories for posts
+✅ Draft/Publish status
+✅ Filter by category and author
+✅ Search functionality
+❌ Comments (excluded for simplicity)
+
+================================================================================
+## PHASE 1: NAVIGATION & AUTHENTICATION
+================================================================================
+
+### 1. UPDATE NAVIGATION COMPONENT
+Location: components/new-header.tsx
+
+TASKS:
+[ ] Add authentication state management (use React Context)
+[ ] Add conditional rendering based on user state:
+    - Logged Out: Home, Categories, Sign In, Sign Up
+    - Logged In (Reader): Home, Categories, Profile, Logout
+    - Logged In (Author): Home, Categories, Dashboard, Profile, Logout
+[ ] Update navigation links:
+    [ ] Home → "/"
+    [ ] Categories → "/categories" (or dropdown)
+    [ ] Dashboard → "/dashboard" (authors only)
+    [ ] Sign In → "/login"
+    [ ] Sign Up → "/register"
+    [ ] Profile → "/profile"
+    [ ] Logout → trigger logout function
+[ ] Add search icon/functionality placeholder
+[ ] Test mobile menu with new links
+
+DEPENDENCIES THIS CREATES:
+→ Need AuthContext (contexts/AuthContext.tsx)
+→ Need Sign In page (app/login/page.tsx) - UPDATE EXISTING
+→ Need Sign Up page (app/register/page.tsx) - UPDATE EXISTING
+→ Need Profile page (app/profile/page.tsx) - CREATE NEW
+→ Need Categories page (app/categories/page.tsx) - CREATE NEW
+
+---
+
+### 2. CREATE AUTH CONTEXT
+Location: contexts/AuthContext.tsx
+
+TASKS:
+[ ] Create AuthContext with TypeScript interfaces
+[ ] Add user state (user object, isAuthenticated, isAuthor)
+[ ] Add authentication functions:
+    [ ] login(username, password)
+    [ ] logout()
+    [ ] register(username, email, password)
+[ ] Add JWT token management (localStorage)
+[ ] Add token refresh logic
+[ ] Wrap app with AuthProvider in layout.tsx
+
+DEPENDENCIES THIS CREATES:
+→ Need API auth service (lib/api/auth.ts)
+→ Need to update app/layout.tsx
+
+---
+
+### 3. UPDATE SIGN IN PAGE
+Location: app/login/page.tsx
+
+TASKS:
+[ ] Replace with NewHeader navigation
+[ ] Add form validation (react-hook-form + zod)
+[ ] Connect to AuthContext login function
+[ ] Add error handling and display
+[ ] Add loading state
+[ ] Add redirect after successful login
+[ ] Style with bottom-border inputs (like contact form)
+[ ] Add "Don't have an account? Sign Up" link
+
+DEPENDENCIES THIS CREATES:
+→ Need form validation libraries (already installed)
+→ Need API auth service
+
+---
+
+### 4. CREATE SIGN UP PAGE
+Location: app/register/page.tsx
+
+TASKS:
+[ ] Replace with NewHeader navigation
+[ ] Add registration form fields:
+    [ ] Username
+    [ ] Email
+    [ ] Password
+    [ ] Confirm Password
+    [ ] "Register as Author" checkbox (is_author)
+[ ] Add form validation (react-hook-form + zod)
+[ ] Connect to AuthContext register function
+[ ] Add error handling and display
+[ ] Add loading state
+[ ] Add redirect after successful registration
+[ ] Style with bottom-border inputs
+[ ] Add "Already have an account? Sign In" link
+
+---
+
+### 5. CREATE PROFILE PAGE
+Location: app/profile/page.tsx
+
+TASKS:
+[ ] Add NewHeader navigation
+[ ] Display user information:
+    [ ] Username
+    [ ] Email
+    [ ] Account type (Reader/Author)
+    [ ] Member since date
+[ ] Add "Edit Profile" functionality (optional)
+[ ] Add "My Posts" section (if author)
+[ ] Style consistently with site design
+
+================================================================================
+## PHASE 2: API SERVICE LAYER
+================================================================================
+
+### 6. CREATE API CLIENT
+Location: lib/api/client.ts
+
+TASKS:
+[ ] Install axios (if not already installed)
+[ ] Create base axios instance
+[ ] Add base URL configuration (from env variables)
+[ ] Add request interceptor (attach JWT token)
+[ ] Add response interceptor (handle 401, refresh token)
+[ ] Add error handling utilities
+[ ] Export configured client
+
+---
+
+### 7. CREATE AUTH API SERVICE
+Location: lib/api/auth.ts
+
+TASKS:
+[ ] Create register function
+    - POST /api/v1/auth/register/
+    - Parameters: username, email, password, is_author
+    - Returns: user data + JWT tokens
+[ ] Create login function
+    - POST /api/v1/auth/login/
+    - Parameters: username, password
+    - Returns: user data + JWT tokens
+[ ] Create logout function (clear tokens)
+[ ] Create refreshToken function
+    - POST /api/v1/auth/refresh/
+    - Returns: new access token
+[ ] Create getCurrentUser function (decode JWT)
+
+---
+
+### 8. CREATE POSTS API SERVICE
+Location: lib/api/posts.ts
+
+TASKS:
+[ ] Create getAllPosts function
+    - GET /api/v1/posts/
+    - Returns: array of published posts
+[ ] Create getPostBySlug function
+    - GET /api/v1/posts/:slug/
+    - Returns: single post
+[ ] Create createPost function (authors only)
+    - POST /api/v1/posts/
+    - Parameters: title, content, category, status
+    - Returns: created post
+[ ] Create updatePost function (owner only)
+    - PUT/PATCH /api/v1/posts/:slug/
+    - Parameters: title, content, category, status
+    - Returns: updated post
+[ ] Create deletePost function (owner only)
+    - DELETE /api/v1/posts/:slug/
+[ ] Create getPostsByCategory function
+    - GET /api/v1/posts/category/:categorySlug/
+    - Returns: filtered posts
+[ ] Create getPostsByAuthor function
+    - GET /api/v1/posts/author/:username/
+    - Returns: filtered posts
+[ ] Create searchPosts function
+    - GET /api/v1/posts/?search=query
+    - Returns: search results
+
+---
+
+### 9. CREATE CATEGORIES API SERVICE
+Location: lib/api/categories.ts
+
+TASKS:
+[ ] Create getAllCategories function
+    - GET /api/v1/categories/
+    - Returns: array of categories
+
+================================================================================
+## PHASE 3: PAGE UPDATES
+================================================================================
+
+### 10. UPDATE HOME PAGE
+Location: app/page.tsx
+
+TASKS:
+[ ] Replace mock data with API call (getAllPosts)
+[ ] Add loading state
+[ ] Add error handling
+[ ] Keep existing design (hero, categories, article grid, etc.)
+[ ] Add pagination (if needed)
+
+---
+
+### 11. UPDATE ARTICLE DETAIL PAGE
+Location: app/article/[slug]/page.tsx
+
+TASKS:
+[ ] Replace with NewHeader navigation
+[ ] Replace mock data with API call (getPostBySlug)
+[ ] Add loading state
+[ ] Add error handling
+[ ] Add "Edit" button (if user is post owner)
+[ ] Add "Delete" button (if user is post owner)
+[ ] Display category with link
+[ ] Display author with link
+
+---
+
+### 12. UPDATE DASHBOARD PAGE
+Location: app/dashboard/page.tsx
+
+TASKS:
+[ ] Replace with NewHeader navigation
+[ ] Add authentication check (redirect if not author)
+[ ] Replace mock data with API call (getPostsByAuthor)
+[ ] Add "Create New Post" button
+[ ] Display user's posts (drafts and published separately)
+[ ] Add edit/delete actions for each post
+[ ] Add stats (total posts, drafts, published)
+
+---
+
+### 13. CREATE CATEGORY PAGE
+Location: app/category/[slug]/page.tsx
+
+TASKS:
+[ ] Add NewHeader navigation
+[ ] Fetch posts by category (getPostsByCategory)
+[ ] Display category name as heading
+[ ] Display filtered posts in grid
+[ ] Add loading and error states
+[ ] Add "No posts in this category" empty state
+
+---
+
+### 14. CREATE AUTHOR PAGE
+Location: app/author/[username]/page.tsx
+
+TASKS:
+[ ] Add NewHeader navigation
+[ ] Fetch posts by author (getPostsByAuthor)
+[ ] Display author name as heading
+[ ] Display author's published posts in grid
+[ ] Add loading and error states
+[ ] Add "No posts yet" empty state
+
+---
+
+### 15. CREATE SEARCH PAGE
+Location: app/search/page.tsx
+
+TASKS:
+[ ] Add NewHeader navigation
+[ ] Add search input field
+[ ] Fetch search results (searchPosts)
+[ ] Display results in grid
+[ ] Add loading and error states
+[ ] Add "No results found" empty state
+[ ] Add search query in URL params
+
+---
+
+### 16. CREATE CATEGORIES LISTING PAGE
+Location: app/categories/page.tsx
+
+TASKS:
+[ ] Add NewHeader navigation
+[ ] Fetch all categories (getAllCategories)
+[ ] Display categories in grid (similar to home page category section)
+[ ] Add post count for each category
+[ ] Add loading and error states
+
+---
+
+### 17. CREATE/UPDATE POST EDITOR PAGE
+Location: app/dashboard/editor/page.tsx (or /dashboard/new)
+
+TASKS:
+[ ] Add NewHeader navigation
+[ ] Add authentication check (authors only)
+[ ] Create post editor form:
+    [ ] Title input
+    [ ] Content textarea (or rich text editor)
+    [ ] Category dropdown
+    [ ] Status toggle (Draft/Published)
+[ ] Add form validation
+[ ] Connect to createPost API
+[ ] Add loading state
+[ ] Redirect to post after creation
+[ ] Handle for both new posts and editing existing posts
+
+================================================================================
+## PHASE 4: ENVIRONMENT & CONFIGURATION
+================================================================================
+
+### 18. ENVIRONMENT VARIABLES
+Location: .env.local
+
+TASKS:
+[ ] Add NEXT_PUBLIC_API_BASE_URL
+[ ] Add any other required environment variables
+[ ] Create .env.example for documentation
+
+---
+
+### 19. UPDATE APP LAYOUT
+Location: app/layout.tsx
+
+TASKS:
+[ ] Wrap app with AuthProvider
+[ ] Ensure NewHeader is used globally (or per page)
+
+================================================================================
+## PHASE 5: BACKEND DEVELOPMENT (LATER)
+================================================================================
+
+### 20. DJANGO BACKEND SETUP
+[ ] Initialize Django project
+[ ] Install dependencies (DRF, SimpleJWT, etc.)
+[ ] Configure database (SQLite for dev, PostgreSQL for prod)
+[ ] Create models (User, Category, Post)
+[ ] Create serializers
+[ ] Create viewsets and permissions
+[ ] Configure URLs
+[ ] Test endpoints
+[ ] Deploy to Heroku/PythonAnywhere
+
+================================================================================
+## TESTING CHECKLIST
+================================================================================
+
+### Navigation
+[ ] Test logged out state
+[ ] Test logged in as reader
+[ ] Test logged in as author
+[ ] Test mobile menu
+[ ] Test all navigation links
+
+### Authentication
+[ ] Test registration (reader)
+[ ] Test registration (author)
+[ ] Test login
+[ ] Test logout
+[ ] Test token refresh
+[ ] Test protected routes
+
+### Posts
+[ ] Test viewing all posts
+[ ] Test viewing single post
+[ ] Test creating post (author)
+[ ] Test editing post (owner)
+[ ] Test deleting post (owner)
+[ ] Test draft/publish status
+
+### Filtering & Search
+[ ] Test filter by category
+[ ] Test filter by author
+[ ] Test search functionality
+
+================================================================================
+## NOTES
+================================================================================
+
+- Start with navigation → forces creation of auth pages
+- Auth pages → force creation of AuthContext
+- AuthContext → forces creation of API services
+- API services → enable updating all pages with real data
+- Work systematically, completing all dependencies before moving on
+- Test each phase before proceeding to the next

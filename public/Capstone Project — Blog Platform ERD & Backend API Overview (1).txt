@@ -1,0 +1,66 @@
+1. Entity Relationship Diagram (ERD)
+Our project is a simple blog platform that allows users to register, log in, create blog posts, and delete or manage their own content. The system also supports comments on blog posts.
+
+The ERD consists of three main entities: User
+? user_id (Primary Key)
+
+? username
+
+? email
+
+? password
+
+? created_at
+
+
+Post
+
+? post_id (Primary Key)
+
+? title
+
+? content
+
+? user_id (Foreign Key ? User)
+
+? created_at
+
+
+Comment
+
+? comment_id (Primary Key)
+
+? content
+
+? user_id (Foreign Key ? User)
+
+? post_id (Foreign Key ? Post)
+
+? created_at
+
+
+Relationships
+
+? A User can create multiple Posts.
+
+? A Post can have multiple Comments.
+
+? A User can write multiple Comments.
+
+
+
+
+
+
+2. API Endpoints for the Backend
+
+Authentication
+
+MethodEndpointDescriptionPOST/auth/regis terCreate a new user accountPOST/auth/loginLog in and receive a token
+
+Posts
+
+MethodEndpointDescriptionGET/postsGet all postsGET/posts/: idGet a specific postPOST/postsCreate a new post (requires login)PUT/posts/: idUpdate a post (owner only)DELETE/posts/: idDelete a post (owner only)
+Comments
+
+MethodEndpointDescriptionGET/posts/:id/comm entsGet comments for a postPOST/posts/:id/comm entsAdd a comment (requires login)DELETE/comments/:idDelete a comment (owner only)
