@@ -5,9 +5,9 @@ import { NewFooter } from "@/components/new-footer"
 import { ArticleCard } from "@/components/article-card"
 import { Search } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 
-export default function SearchPage() {
+function SearchContent() {
     const searchParams = useSearchParams()
     const queryParam = searchParams.get("q") || ""
     const [query, setQuery] = useState(queryParam)
@@ -131,5 +131,17 @@ export default function SearchPage() {
 
             <NewFooter />
         </div>
+    )
+}
+
+export default function SearchPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <p className="text-muted-foreground">Loading search...</p>
+            </div>
+        }>
+            <SearchContent />
+        </Suspense>
     )
 }
