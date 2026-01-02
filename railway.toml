@@ -1,0 +1,18 @@
+# Railway Monorepo Configuration
+# This file tells Railway how to deploy both backend and frontend
+
+# Backend Service (Django)
+[backend]
+builder = "NIXPACKS"
+buildCommand = "pip install -r requirements.txt"
+startCommand = "gunicorn blog_project.wsgi --log-file -"
+healthcheckPath = "/api/v1/"
+healthcheckTimeout = 100
+
+# Frontend Service (Next.js)
+[frontend]
+builder = "NIXPACKS"
+buildCommand = "npm install && npm run build"
+startCommand = "npm start"
+healthcheckPath = "/"
+healthcheckTimeout = 100
