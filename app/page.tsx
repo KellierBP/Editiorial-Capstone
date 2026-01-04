@@ -1,11 +1,12 @@
 import { NewHeader } from "@/components/new-header"
 import { HeroSection } from "@/components/hero-section"
 import { CategorySection } from "@/components/category-section"
-import { AboutSection } from "@/components/about-section"
+
 import { ArticleGrid } from "@/components/article-grid"
 import { PopularArticles } from "@/components/popular-articles"
 import { ContactSection } from "@/components/contact-section"
 import { NewFooter } from "@/components/new-footer"
+import { postsApi } from "@/lib/api/posts"
 
 const categories = [
   { name: "Business", slug: "business", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=400&fit=crop" },
@@ -22,107 +23,68 @@ const categories = [
   { name: "Others", slug: "others", image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=400&fit=crop" },
 ]
 
-const featuredArticles = [
-  {
-    title: "Top 10 Rendering Software for Stunning Visuals",
-    excerpt: "Discover the best rendering tools for creating photorealistic images.",
-    author: "Elena Morrison",
-    date: "February 25, 2025",
-    category: "Trading",
-    image: "/minimalist-modern-interior-design.jpg",
-    slug: "rendering-software",
-    readTime: "10 min read",
-    sponsored: true,
-  },
-  {
-    title: "Why you should outsource design: overcoming limitations to maximize business success",
-    excerpt: "Learn how outsourcing can help your business grow.",
-    author: "Marcus Chen",
-    date: "February 25, 2025",
-    category: "Trading",
-    image: "/tadao-ando-concrete-architecture.jpg",
-    slug: "outsource-design",
-    readTime: "10 min read",
-    sponsored: true,
-  },
-  {
-    title: "Budget Travel: Exploring the World Affordably",
-    excerpt: "Tips and tricks for traveling on a budget without compromising experience.",
-    author: "Sophie Laurent",
-    date: "February 25, 2025",
-    category: "Trading",
-    image: "/analog-film-photography-camera.jpg",
-    slug: "budget-travel",
-    readTime: "10 min read",
-    sponsored: true,
-  },
-]
+// Helper to shuffle array
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array]
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+      ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+  }
+  return newArray
+}
 
-const articles = [
-  {
-    title: "Architecture as Poetry: The Work of Tadao Ando",
-    excerpt: "Discovering the profound simplicity and spiritual depth in concrete and light.",
-    author: "Marcus Chen",
-    date: "January 12, 2025",
-    category: "Architecture",
-    image: "/tadao-ando-concrete-architecture.jpg",
-    slug: "tadao-ando-architecture",
-  },
-  {
-    title: "The Revival of Analog Photography",
-    excerpt: "Why artists are returning to film in the digital age and what it means for visual storytelling.",
-    author: "Sophie Laurent",
-    date: "January 10, 2025",
-    category: "Photography",
-    image: "/analog-film-photography-camera.jpg",
-    slug: "analog-photography-revival",
-  },
-  {
-    title: "Slow Fashion: A Conversation with Sustainability",
-    excerpt: "Leading designers discuss the movement toward conscious consumption and timeless style.",
-    author: "Isabella Rossi",
-    date: "January 8, 2025",
-    category: "Fashion",
-    image: "/sustainable-minimalist-fashion.jpg",
-    slug: "slow-fashion-sustainability",
-  },
-  {
-    title: "The Art of the Pause: Finding Silence in Sound",
-    excerpt: "Modern composers explore the power of restraint and the beauty of empty space.",
-    author: "Daniel Park",
-    date: "January 5, 2025",
-    category: "Music",
-    image: "/minimalist-music-composer-piano.jpg",
-    slug: "art-of-pause-music",
-  },
-  {
-    title: "Ceramic Masters: The Language of Clay",
-    excerpt: "Contemporary ceramicists reimagine ancient traditions with a modern sensibility.",
-    author: "Yuki Tanaka",
-    date: "January 3, 2025",
-    category: "Craft",
-    image: "/ceramic-pottery-minimal-handmade.jpg",
-    slug: "ceramic-masters",
-  },
-  {
-    title: "Nordic Interiors: Light and Space",
-    excerpt: "How Scandinavian design principles create warmth through simplicity.",
-    author: "Astrid Larsen",
-    date: "December 30, 2024",
-    category: "Interior",
-    image: "/nordic-scandinavian-interior-design.jpg",
-    slug: "nordic-interiors",
-  },
-]
+export default async function HomePage() {
+  let allPosts: any[] = []
 
-export default function HomePage() {
+  try {
+    // Fetch posts - trying to get enough for all sections
+    const response = await postsApi.getAllPosts(1)
+    allPosts = response.results || []
+
+    // If needed, fetch page 2
+    if (allPosts.length < 15 && response.next) {
+      try {
+        const response2 = await postsApi.getAllPosts(2)
+        allPosts = [...allPosts, ...(response2.results || [])]
+      } catch (e) {
+        console.error("Failed to fetch page 2", e)
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch posts:", error)
+  }
+
+  // Transform posts to common format
+  const transformedArticles = allPosts.map(post => ({
+    title: post.title,
+    excerpt: post.excerpt,
+    author: post.author.display_name || post.author.username,
+    date: new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    category: post.category.name,
+    image: post.image || "/placeholder.svg",
+    slug: post.slug,
+    readTime: "5 min read", // Placeholder
+    sponsored: false,
+  }))
+
+  // 1. Latest Articles (First 6)
+  const latestArticles = transformedArticles.slice(0, 6)
+
+  // 2. Popular Articles (Next 6, or random fallback)
+  const popularArticles = transformedArticles.length > 6
+    ? transformedArticles.slice(6, 12)
+    : transformedArticles.slice(0, 6)
+
+  // 3. Hero Articles (3 Random)
+  const heroArticles = shuffleArray(transformedArticles).slice(0, 3)
+
   return (
     <div className="min-h-screen bg-background">
       <NewHeader />
 
       <main>
-        {/* Hero Section with Featured Articles */}
-        <HeroSection featuredArticles={featuredArticles} />
+        {/* Hero Section with Random Featured Articles */}
+        <HeroSection featuredArticles={heroArticles} />
 
         {/* Divider */}
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
@@ -137,14 +99,13 @@ export default function HomePage() {
           <div className="border-t border-border" />
         </div>
 
-        {/* Article Grid */}
-        <ArticleGrid articles={articles} />
+        {/* Article Grid - Latest Articles */}
+        <ArticleGrid articles={latestArticles} />
 
         {/* Divider */}
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="border-t border-border" />
         </div>
-
 
         {/* Divider */}
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
@@ -152,7 +113,7 @@ export default function HomePage() {
         </div>
 
         {/* Popular Articles */}
-        <PopularArticles articles={articles.slice(0, 6)} />
+        <PopularArticles articles={popularArticles} />
 
         {/* Divider */}
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
