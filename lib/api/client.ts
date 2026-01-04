@@ -1,7 +1,20 @@
 // Base API client configuration
 // This will be used by all API services
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1"
+const getBaseUrl = () => {
+    let url = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1"
+    // Remove trailing slash if present
+    if (url.endsWith('/')) {
+        url = url.slice(0, -1)
+    }
+    // Append /api/v1 if not present
+    if (!url.endsWith('/api/v1')) {
+        url += '/api/v1'
+    }
+    return url
+}
+
+const API_BASE_URL = getBaseUrl()
 
 interface ApiError {
     message: string
