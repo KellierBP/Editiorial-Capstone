@@ -508,6 +508,32 @@ Beyond medicine, CRISPR could create drought-resistant crops, reduce pesticide u
                 'author_index': 3,
             },
         ]
+        
+        # Add images to posts (using Unsplash Source for quality demo images)
+        posts_data[0]['image'] = 'https://source.unsplash.com/1600x900/?minimalist,architecture'
+        posts_data[1]['image'] = 'https://source.unsplash.com/1600x900/?concrete,building'
+        posts_data[2]['image'] = 'https://source.unsplash.com/1600x900/?light,photography'
+        posts_data[3]['image'] = 'https://source.unsplash.com/1600x900/?film,camera'
+        posts_data[4]['image'] = 'https://source.unsplash.com/1600x900/?sustainable,fashion'
+        posts_data[5]['image'] = 'https://source.unsplash.com/1600x900/?textile,fabric'
+        posts_data[6]['image'] = 'https://source.unsplash.com/1600x900/?design,workspace'
+        posts_data[7]['image'] = 'https://source.unsplash.com/1600x900/?color,abstract'
+        posts_data[8]['image'] = 'https://source.unsplash.com/1600x900/?ai,technology'
+        posts_data[9]['image'] = 'https://source.unsplash.com/1600x900/?blockchain,interface'
+        posts_data[10]['image'] = 'https://source.unsplash.com/1600x900/?travel,nature'
+        posts_data[11]['image'] = 'https://source.unsplash.com/1600x900/?urban,city'
+        posts_data[12]['image'] = 'https://source.unsplash.com/1600x900/?vinyl,record'
+        posts_data[13]['image'] = 'https://source.unsplash.com/1600x900/?street,art'
+        posts_data[14]['image'] = 'https://source.unsplash.com/1600x900/?digital,art'
+        posts_data[15]['image'] = 'https://source.unsplash.com/1600x900/?installation,art'
+        posts_data[16]['image'] = 'https://source.unsplash.com/1600x900/?farm,food'
+        posts_data[17]['image'] = 'https://source.unsplash.com/1600x900/?fermentation,jars'
+        posts_data[18]['image'] = 'https://source.unsplash.com/1600x900/?minimal,living'
+        posts_data[19]['image'] = 'https://source.unsplash.com/1600x900/?nature,peace'
+        posts_data[20]['image'] = 'https://source.unsplash.com/1600x900/?dj,music'
+        posts_data[21]['image'] = 'https://source.unsplash.com/1600x900/?jazz,saxophone'
+        posts_data[22]['image'] = 'https://source.unsplash.com/1600x900/?quantum,physics'
+        posts_data[23]['image'] = 'https://source.unsplash.com/1600x900/?dna,research'
 
         created_posts = []
         for i, post_data in enumerate(posts_data):
@@ -521,6 +547,7 @@ Beyond medicine, CRISPR could create drought-resistant crops, reduce pesticide u
                     'category': category,
                     'status': 'published',
                     'author': author,
+                    'image': post_data.get('image'),
                 }
             )
             if created:

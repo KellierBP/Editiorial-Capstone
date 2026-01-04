@@ -5,8 +5,9 @@ import { NewFooter } from "@/components/new-footer"
 import { ArticleCard } from "@/components/article-card"
 import { Facebook, Twitter, Linkedin, Link as LinkIcon, Mail } from "lucide-react"
 import Link from "next/link"
-import { use, useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import { postsApi } from "@/lib/api/posts"
 
 interface PageProps {
   params: Promise<{
@@ -17,108 +18,71 @@ interface PageProps {
 export default function ArticlePage({ params }: PageProps) {
   const { slug } = use(params)
   const { user, isAuthenticated } = useAuth()
+  const [article, setArticle] = useState<any>(null)
+  const [relatedArticles, setRelatedArticles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [newComment, setNewComment] = useState("")
-  const [mockComments, setMockComments] = useState([
-    {
-      id: "1",
-      author: "Marcus Webb",
-      content: "Fascinating perspective on minimalism. The connection between restraint and impact really resonates with my own work in photography.",
-      date: "2 days ago",
-    },
-    {
-      id: "2",
-      author: "Elena Rodriguez",
-      content: "This article beautifully captures the essence of what makes minimalist design timeless. Thank you for sharing!",
-      date: "1 day ago",
-    },
-  ])
+  const [comments, setComments] = useState<any[]>([]) // In a real app, fetch comments separately or nested
 
-  // Mock article data (will be replaced with API call)
-  const article = {
-    title: "Architecture as Poetry: The Work of Tadao Ando",
-    slug: "tadao-ando-architecture",
-    content: `In an era of constant stimulation and digital noise, the principles of minimalism have never been more relevant. This exploration examines how contemporary designers are reinterpreting restraint, simplicity, and purpose to create spaces and objects that resonate with clarity and intention.
+  useEffect(() => {
+    const fetchArticle = async () => {
+      try {
+        setLoading(true)
+        const data = await postsApi.getPostBySlug(slug)
+        setArticle({
+          ...data,
+          // Ensure image has a fallback
+          image: data.image || "/placeholder.svg",
+          // Format date
+          date: new Date(data.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          // Map author if needed (API returns object)
+          authorName: typeof data.author === 'object' ? (data.author.username) : data.author,
+          categoryName: typeof data.category === 'object' ? (data.category.name) : data.category,
+        })
 
-## The Evolution of Less
+        // Fetch related articles (mock logic: fetch all and filter, or add specific endpoint)
+        // For now, we'll just fetch recent posts as "related"
+        const recentPosts = await postsApi.getAllPosts(1)
+        setRelatedArticles(recentPosts.results
+          .filter(p => p.slug !== slug)
+          .slice(0, 3)
+          .map(p => ({
+            title: p.title,
+            excerpt: p.excerpt,
+            author: typeof p.author === 'object' ? p.author.username : p.author,
+            date: new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            category: typeof p.category === 'object' ? p.category.name : p.category,
+            image: p.image || "/placeholder.svg",
+            slug: p.slug,
+          }))
+        )
 
-Minimalism emerged not as a rejection of beauty, but as a refinement of it. From the Bauhaus movement to the Japanese concept of "Ma" — the appreciation of negative space — designers have long understood that what we remove is as important as what we include. Today's practitioners build upon this foundation, creating work that speaks through absence rather than abundance.
-
-The contemporary interpretation extends beyond mere aesthetic choice. It represents a philosophical stance on consumption, attention, and the role of design in daily life. Every line, every surface, every carefully considered detail serves a purpose or creates meaning through its relationship to space.
-
-## Material Honesty
-
-Modern minimalism celebrates materials in their truest form. Concrete reveals its texture, wood shows its grain, metal accepts its patina. This honest approach creates intimacy between object and observer, inviting touch and contemplation. The surface becomes a record of time, use, and care — qualities that connect us to the physical world.
-
-Leading architects like Tadao Ando demonstrate how limited materials — primarily concrete and light — can create profound spatial experiences. His work proves that restriction breeds creativity, and that mastery comes not from variety but from depth of understanding.
-
-> "Simplicity is not the goal. It is the by-product of a good idea and modest expectations." — Paul Rand
-
-## The Power of Restraint
-
-In graphic design, typography, and digital interfaces, minimalism manifests as careful hierarchy and generous white space. Each element receives room to breathe, allowing the viewer's eye to move naturally through the composition. This restraint doesn't diminish impact — it amplifies it.
-
-The digital realm particularly benefits from this approach. As screens dominate our attention, designers who understand restraint create experiences that feel calm rather than chaotic, focused rather than overwhelming. They recognize that the most sophisticated interface is often invisible.`,
-    excerpt: "Discovering the profound simplicity and spiritual depth in concrete and light.",
-    author: "Sarah Chen",
-    authorBio: "Sarah is an architecture writer and critic based in Tokyo. Her work focuses on the intersection of traditional Japanese aesthetics and contemporary design.",
-    date: "Dec 15, 2024",
-    readTime: "8 min read",
-    category: "Architecture",
-    image: "/tadao-ando-concrete-architecture.jpg",
-  }
-
-  // Related articles
-  const relatedArticles = [
-    {
-      title: "The Revival of Analog Photography",
-      excerpt: "Why artists are returning to film in the digital age.",
-      author: "Marcus Webb",
-      date: "Dec 12, 2024",
-      category: "Photography",
-      image: "/analog-film-photography-camera.jpg",
-      slug: "analog-photography-revival",
-    },
-    {
-      title: "Slow Fashion: A Conversation with Sustainability",
-      excerpt: "Leading designers discuss conscious consumption and timeless style.",
-      author: "Elena Rodriguez",
-      date: "Dec 10, 2024",
-      category: "Fashion",
-      image: "/sustainable-minimalist-fashion.jpg",
-      slug: "slow-fashion-sustainability",
-    },
-    {
-      title: "Minimalist Spaces: Form Follows Function",
-      excerpt: "Exploring the beauty of simplicity in modern architectural design.",
-      author: "Sarah Chen",
-      date: "Dec 8, 2024",
-      category: "Architecture",
-      image: "/placeholder.svg",
-      slug: "minimalist-spaces",
-    },
-  ]
-
-  const shareUrl = typeof window !== "undefined" ? window.location.href : ""
-  const shareTitle = article.title
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return
-
-    const comment = {
-      id: Date.now().toString(),
-      author: user?.username || "Anonymous",
-      content: newComment,
-      date: "Just now",
+      } catch (err) {
+        console.error("Failed to fetch article:", err)
+        setError("Article not found")
+      } finally {
+        setLoading(false)
+      }
     }
 
-    setMockComments([comment, ...mockComments])
+    if (slug) {
+      fetchArticle()
+    }
+  }, [slug])
+
+
+  const shareUrl = typeof window !== "undefined" ? window.location.href : ""
+  const shareTitle = article?.title || ""
+
+  const handleAddComment = () => {
+    // Implement comment API call here
+    alert("Comment feature coming soon!")
     setNewComment("")
   }
 
   const handleDeleteComment = (commentId: string) => {
-    if (confirm("Are you sure you want to delete this comment?")) {
-      setMockComments(mockComments.filter((c) => c.id !== commentId))
-    }
+    // Implement delete API call here
   }
 
   const handleShare = (platform: string) => {
@@ -133,8 +97,31 @@ The digital realm particularly benefits from this approach. As screens dominate 
       navigator.clipboard.writeText(shareUrl)
       alert("Link copied to clipboard!")
     } else {
+      // @ts-ignore
       window.open(urls[platform as keyof typeof urls], "_blank", "width=600,height=400")
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <NewHeader />
+        <p className="text-xl text-muted-foreground">Loading article...</p>
+      </div>
+    )
+  }
+
+  if (error || !article) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <NewHeader />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <h1 className="text-3xl font-serif mb-4">Article Not Found</h1>
+          <Link href="/discover" className="text-accent hover:underline">Return to Discover</Link>
+        </div>
+        <NewFooter />
+      </div>
+    )
   }
 
   return (
@@ -154,7 +141,7 @@ The digital realm particularly benefits from this approach. As screens dominate 
           <header className="bg-background rounded-2xl p-8 lg:p-12 shadow-2xl mb-16">
             <div className="inline-block mb-4">
               <span className="text-xs uppercase tracking-widest px-3 py-1 rounded-full bg-accent/10 text-accent font-medium">
-                {article.category}
+                {article.categoryName}
               </span>
             </div>
             <h1 className="font-serif text-4xl lg:text-6xl leading-tight text-balance text-foreground mb-6">
@@ -163,21 +150,21 @@ The digital realm particularly benefits from this approach. As screens dominate 
             <p className="text-lg text-muted-foreground mb-6">{article.excerpt}</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 border-t border-border">
               <Link
-                href={`/author/${encodeURIComponent(article.author)}`}
+                href={`/author/${encodeURIComponent(article.authorName)}`}
                 className="text-foreground font-medium hover:text-accent transition-colors"
               >
-                {article.author}
+                {article.authorName}
               </Link>
               <span>·</span>
               <span>{article.date}</span>
-              <span>·</span>
-              <span>{article.readTime}</span>
+              {/* <span>·</span>
+              <span>{article.readTime || "5 min read"}</span> */}
             </div>
           </header>
 
           {/* Article Body */}
           <div className="prose prose-lg max-w-none mb-16">
-            {article.content.split("\n\n").map((paragraph, index) => {
+            {article.content.split("\n\n").map((paragraph: string, index: number) => {
               // Handle headings
               if (paragraph.startsWith("## ")) {
                 return (
@@ -252,98 +239,29 @@ The digital realm particularly benefits from this approach. As screens dominate 
             </div>
           </div>
 
-          {/* Author Bio */}
+          {/* Author Bio (Placeholder for now as API might not return bio) */}
           <div className="border-t border-border pt-12 mb-16">
             <div className="flex items-start gap-6">
               <div className="w-20 h-20 rounded-full bg-muted flex-shrink-0" />
               <div className="space-y-2">
                 <Link
-                  href={`/author/${encodeURIComponent(article.author)}`}
+                  href={`/author/${encodeURIComponent(article.authorName)}`}
                   className="font-serif text-xl text-foreground hover:text-accent transition-colors inline-block"
                 >
-                  {article.author}
+                  {article.authorName}
                 </Link>
-                <p className="text-sm leading-relaxed text-muted-foreground">{article.authorBio}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">Author at Editorial</p>
               </div>
             </div>
           </div>
 
-          {/* Comments Section */}
+          {/* Comments Section (Placeholder) */}
           <div className="border-t border-border pt-12 mb-16">
             <h3 className="font-serif text-2xl text-foreground mb-8">
-              Comments ({mockComments.length})
+              Comments (0)
             </h3>
-
-            {/* Add Comment Form */}
-            {isAuthenticated ? (
-              <div className="mb-12 p-6 rounded-lg border-2 border-border bg-muted/30">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent transition-colors resize-none mb-3"
-                />
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                    className="h-10 px-6 rounded-full bg-foreground text-background hover:bg-accent transition-colors text-sm uppercase tracking-wider font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Post Comment
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-12 p-6 rounded-lg border-2 border-dashed border-border text-center">
-                <p className="text-muted-foreground mb-4">Sign in to leave a comment</p>
-                <button
-                  onClick={() => {
-                    // This would trigger the sign in modal
-                    console.log("Open sign in modal")
-                  }}
-                  className="h-10 px-6 rounded-full bg-foreground text-background hover:bg-accent transition-colors text-sm uppercase tracking-wider font-medium"
-                >
-                  Sign In
-                </button>
-              </div>
-            )}
-
-            {/* Comments List */}
-            <div className="space-y-6">
-              {mockComments.map((comment) => (
-                <div key={comment.id} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-muted flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <Link
-                          href={`/author/${encodeURIComponent(comment.author)}`}
-                          className="font-medium text-foreground hover:text-accent transition-colors"
-                        >
-                          {comment.author}
-                        </Link>
-                        <span className="text-xs text-muted-foreground">{comment.date}</span>
-                      </div>
-                      {isAuthenticated && user?.username === comment.author && (
-                        <button
-                          onClick={() => handleDeleteComment(comment.id)}
-                          className="text-xs text-muted-foreground hover:text-red-500 transition-colors uppercase tracking-wider"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-sm leading-relaxed text-foreground">{comment.content}</p>
-                  </div>
-                </div>
-              ))}
-
-              {mockComments.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No comments yet. Be the first to share your thoughts!</p>
-                </div>
-              )}
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Comments are disabled for this preview.</p>
             </div>
           </div>
         </article>
