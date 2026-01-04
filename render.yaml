@@ -2,11 +2,13 @@ databases:
   - name: blog-db
     databaseName: blog_news_db
     user: blog_user
+    plan: free
 
 services:
   - type: web
     name: blog-backend
     runtime: python
+    plan: free
     region: oregon
     buildCommand: "./build.sh"
     startCommand: "gunicorn blog_project.wsgi --log-file -"
@@ -24,6 +26,7 @@ services:
   - type: web
     name: blog-frontend
     runtime: node
+    plan: free
     region: oregon
     buildCommand: "npm install && npm run build"
     startCommand: "npm start"
