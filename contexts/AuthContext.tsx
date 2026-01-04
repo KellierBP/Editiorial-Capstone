@@ -38,6 +38,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         loadUser()
+
+        // Listen for 401 Unauthorized events from API client
+        const handleUnauthorized = () => {
+            setUser(null)
+            // Optional: Redirect to login or show notification
+            console.log("Session expired. Logging out.")
+        }
+
+        window.addEventListener("auth:unauthorized", handleUnauthorized)
+
+        return () => {
+            window.removeEventListener("auth:unauthorized", handleUnauthorized)
+        }
     }, [])
 
     const login = async (username: string, password: string) => {
@@ -54,8 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             await authApi.logout()
             setUser(null)
-        } catch (error) {
-            console.error("Logout error:", error)
+        } catch (error: any) {
+            // If the token is invalid (401), we don't need to log an error
+            // because we are logging out anyway.
+            if (error?.status !== 401) {
+                console.error("Logout error:", error)
+            }
             // Clear user even if API call fails
             setUser(null)
         }

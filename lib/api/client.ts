@@ -35,6 +35,16 @@ class ApiClient {
 
     private async handleResponse<T>(response: Response): Promise<T> {
         if (!response.ok) {
+            // Handle 401 Unauthorized (Expired/Invalid Token)
+            if (response.status === 401) {
+                if (typeof window !== "undefined") {
+                    localStorage.removeItem("access_token")
+                    localStorage.removeItem("user")
+                    // Dispatch custom event so AuthContext can update state
+                    window.dispatchEvent(new Event("auth:unauthorized"))
+                }
+            }
+
             let errorMessage = `API Error: ${response.statusText}`
             try {
                 const text = await response.text()
@@ -51,7 +61,6 @@ class ApiClient {
                     }
                 } catch {
                     // If JSON parse fails, show the raw text (up to 100 chars)
-                    // This catches HTML 400s or empty bodies
                     errorMessage = `API Error (${response.status}): ${text.slice(0, 100)}`
                 }
             } catch (e) {
