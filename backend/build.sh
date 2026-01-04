@@ -10,3 +10,6 @@ python manage.py collectstatic --no-input
 
 # Run migrations
 python manage.py migrate
+
+# Seed data (safe to run multiple times, it uses get_or_create)
+python manage.py seed_data

@@ -36,8 +36,9 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn }: SignUpFormProps) {
         try {
             await register(formData.username, formData.email, formData.password, formData.isAuthor)
             onSuccess()
-        } catch (err) {
-            setError("Registration failed. Please try again.")
+        } catch (err: any) {
+            console.error("Registration error:", err)
+            setError(err.message || "Registration failed. Please try again.")
         } finally {
             setIsLoading(false)
         }
