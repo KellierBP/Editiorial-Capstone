@@ -48,6 +48,7 @@ export default function EditorPage({ params }: PageProps) {
         category: "",
         content: "",
         status: "draft" as "draft" | "published",
+        image: "",
     })
 
     const [isSaving, setIsSaving] = useState(false)
@@ -135,6 +136,25 @@ export default function EditorPage({ params }: PageProps) {
                         />
                     </div>
 
+                    {/* Image URL */}
+                    <div>
+                        <label htmlFor="image" className="block text-sm uppercase tracking-wider text-foreground font-medium mb-3">
+                            Cover Image URL (Optional)
+                        </label>
+                        <input
+                            type="url"
+                            id="image"
+                            name="image"
+                            value={formData.image}
+                            onChange={handleChange}
+                            placeholder="https://images.unsplash.com/..."
+                            className="w-full px-6 py-4 rounded-lg border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent transition-colors"
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                            Paste a link from Unsplash or another image host.
+                        </p>
+                    </div>
+
                     {/* Category */}
                     <div>
                         <label htmlFor="category" className="block text-sm uppercase tracking-wider text-foreground font-medium mb-3">
@@ -192,6 +212,9 @@ You can use markdown formatting:
                     <div className="mt-16 pt-16 border-t border-border">
                         <h2 className="font-serif text-2xl text-foreground mb-8">Preview</h2>
                         <div className="prose prose-lg max-w-none">
+                            {formData.image && (
+                                <img src={formData.image} alt="Cover" className="w-full h-96 object-cover rounded-2xl mb-8" />
+                            )}
                             {formData.title && (
                                 <h1 className="font-serif text-4xl text-foreground mb-6">{formData.title}</h1>
                             )}
