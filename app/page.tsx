@@ -145,8 +145,6 @@ export default function HomePage() {
           <div className="border-t border-border" />
         </div>
 
-        {/* About Section */}
-        <AboutSection />
 
         {/* Divider */}
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
