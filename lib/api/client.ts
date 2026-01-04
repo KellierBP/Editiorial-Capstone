@@ -35,8 +35,27 @@ class ApiClient {
 
     private async handleResponse<T>(response: Response): Promise<T> {
         if (!response.ok) {
+            let errorMessage = `API Error: ${response.statusText}`
+            try {
+                const errorBody = await response.json()
+                // If the error body has a 'detail' field (common in DRF), use it.
+                // Otherwise, stringify the whole body so developers can see validation errors.
+                if (typeof errorBody === 'object' && errorBody !== null) {
+                    if ('detail' in errorBody) {
+                        errorMessage = errorBody.detail
+                    } else {
+                        // Join field errors if possible, or just dump the JSON
+                        errorMessage = Object.entries(errorBody)
+                            .map(([key, val]) => `${key}: ${val}`)
+                            .join(', ')
+                    }
+                }
+            } catch (e) {
+                // Failed to parse JSON, fall back to status text
+            }
+
             const error: ApiError = {
-                message: `API Error: ${response.statusText}`,
+                message: errorMessage,
                 status: response.status,
             }
             throw error
