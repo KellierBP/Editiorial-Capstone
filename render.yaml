@@ -29,7 +29,5 @@ services:
     startCommand: "npm start"
     envVars:
       - key: NEXT_PUBLIC_API_BASE_URL
-        fromService:
-          type: web
-          name: blog-backend
-          property: url
+        value: https://YOUR_BACKEND_URL_HERE/api/v1
+        sync: false
